@@ -163,7 +163,10 @@ impl SentinelNodeConnectionInfo {
                 host: ip,
                 port,
                 insecure: false,
+                #[cfg(not(feature = "tls-rustls"))]
                 tls_params: None,
+                #[cfg(feature = "tls-rustls")]
+                tls_params: Some(retrieve_tls_certificates(self.certs.clone().unwrap()).unwrap())
             },
             Some(TlsMode::Insecure) => crate::ConnectionAddr::TcpTls {
                 host: ip,
@@ -185,6 +188,7 @@ impl Default for &SentinelNodeConnectionInfo {
         static DEFAULT_VALUE: SentinelNodeConnectionInfo = SentinelNodeConnectionInfo {
             tls_mode: None,
             redis_connection_info: None,
+            #[cfg(feature = "tls-rustls")]
             certs: None,
         };
         &DEFAULT_VALUE
@@ -829,7 +833,6 @@ struct BuilderConnectionParams {
     protocol: Option<ProtocolVersion>,
     certificates: Option<TlsCertificates>,
 }
-
 
 /// Used to configure and build a [`SentinelClient`].
 pub struct SentinelClientBuilder {
